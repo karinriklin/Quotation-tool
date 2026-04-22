@@ -162,5 +162,3 @@ bauangebot/
 - Vanilla JS, HTML5, CSS3 — everything else
 
 ---
-
-*Built as a portfolio project to demonstrate AI-native product development, prompt engineering, and rapid prototyping without traditional frameworks.*
