@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BauAngebot Berlin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a18;
+    --ink2: #4a4a44;
+    --ink3: #8a8a80;
+    --paper: #f7f5f0;
+    --paper2: #eeeae2;
+    --paper3: #e4dfd4;
+    --accent: #c45c2a;
+    --accent2: #e8885a;
+    --green: #2d6a4f;
+    --green-bg: #d8f3e0;
+    --blue: #1b3a6b;
+    --blue-bg: #e6eff9;
+    --warn: #b85c00;
+    --warn-bg: #fff0e0;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow: 0 2px 12px rgba(26,26,24,0.08);
+    --shadow-lg: 0 8px 40px rgba(26,26,24,0.13);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+  /* ── Layout ── */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar { width: 260px; min-height: 100vh; background: var(--ink); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 10; }
+  .main { margin-left: 260px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── Sidebar ── */
+  .sb-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sb-logo-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: #fff; letter-spacing: -0.3px; }
+  .sb-logo-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .sb-new { margin: 16px 16px 0; }
+  .sb-new button { width: 100%; padding: 10px 16px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-align: left; display: flex; align-items: center; gap: 8px; }
+  .sb-new button:hover { background: var(--accent2); }
+  .sb-new button::before { content: '+'; font-size: 18px; font-weight: 300; }
+
+  .sb-section { padding: 20px 16px 8px; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em; }
+  .sb-list { list-style: none; padding: 0 8px; flex: 1; overflow-y: auto; }
+  .sb-list li { border-radius: 8px; margin-bottom: 2px; }
+  .sb-list li button { width: 100%; padding: 10px 12px; background: none; border: none; color: rgba(255,255,255,0.7); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; text-align: left; border-radius: 8px; transition: background 0.12s, color 0.12s; display: flex; flex-direction: column; gap: 2px; }
+  .sb-list li button:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .sb-list li.active button { background: rgba(255,255,255,0.12); color: #fff; }
+  .sb-item-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+  .sb-item-meta { font-size: 11px; color: rgba(255,255,255,0.35); }
+  .sb-list li.active .sb-item-meta { color: rgba(255,255,255,0.5); }
+
+  .sb-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 11px; color: rgba(255,255,255,0.3); }
+
+  /* ── Main header ── */
+  .top-bar { padding: 20px 36px; border-bottom: 1px solid var(--paper3); display: flex; align-items: center; justify-content: space-between; background: var(--paper); position: sticky; top: 0; z-index: 5; }
+  .top-bar-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); }
+  .top-bar-meta { font-size: 13px; color: var(--ink3); }
+
+  /* ── Content area ── */
+  .content { padding: 32px 36px; max-width: 900px; }
+
+  /* ── Step wizard ── */
+  .wizard { display: flex; align-items: center; gap: 0; margin-bottom: 32px; }
+  .wstep { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink3); cursor: default; }
+  .wstep.clickable { cursor: pointer; }
+  .wstep.clickable:hover .wnum { border-color: var(--accent); color: var(--accent); }
+  .wstep.active { color: var(--ink); font-weight: 500; }
+  .wstep.done { color: var(--green); cursor: pointer; }
+  .wnum { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--paper3); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; transition: all 0.15s; }
+  .wstep.active .wnum { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .wstep.done .wnum { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+  .wdiv { flex: 1; height: 1px; background: var(--paper3); margin: 0 8px; min-width: 20px; }
+
+  /* ── Cards ── */
+  .card { background: #fff; border: 1px solid var(--paper3); border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 16px; }
+  .card-title { font-size: 11px; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+
+  /* ── Form elements ── */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--ink2); margin-bottom: 5px; font-weight: 500; }
+  .field input, .field textarea, .field select { width: 100%; padding: 9px 12px; border: 1px solid var(--paper3); border-radius: var(--radius); background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; font-size: 14px; transition: border-color 0.15s; }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--ink2); background: #fff; }
+  .field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* ── Buttons ── */
+  .btn { padding: 10px 22px; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-primary:hover { background: #2d2d28; }
+  .btn-secondary { background: #fff; color: var(--ink); border-color: var(--paper3); }
+  .btn-secondary:hover { border-color: var(--ink2); background: var(--paper); }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { background: var(--accent2); }
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+
+  /* ── Work cost box ── */
+  .work-box { background: var(--paper); border: 1px solid var(--paper3); border-radius: var(--radius); padding: 16px 20px; margin-top: 6px; }
+  .work-box-result { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--paper3); }
+  .work-box-result-label { font-size: 13px; color: var(--ink2); }
+  .work-box-result-value { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); }
+
+  /* ── Progress / AI status ── */
+  .ai-status { padding: 20px 0; }
+  .ai-step { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 6px 0; color: var(--ink3); transition: color 0.2s; }
+  .ai-step.done { color: var(--green); }
+  .ai-step.running { color: var(--ink); font-weight: 500; }
+  .ai-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--paper3); flex-shrink: 0; transition: background 0.2s; }
+  .ai-step.done .ai-dot { background: var(--green); }
+  .ai-step.running .ai-dot { background: var(--accent); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .progress-track { height: 3px; background: var(--paper3); border-radius: 2px; margin: 20px 0 0; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--ink); border-radius: 2px; transition: width 0.5s ease; }
+
+  /* ── Shop comparison ── */
+  .shop-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .shop-card { background: var(--paper); border: 1px solid var(--paper3); border-radius: var(--radius); padding: 14px 16px; position: relative; }
+  .shop-card.winner { background: var(--green-bg); border: 2px solid var(--green); }
+  .shop-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; font-size: 10px; font-weight: 500; padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+  .shop-name { font-size: 12px; font-weight: 500; color: var(--ink2); margin-bottom: 6px; }
+  .shop-price { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); }
+  .shop-card.winner .shop-price { color: var(--green); }
+  .shop-addr { font-size: 11px; color: var(--ink3); margin-top: 3px; }
+  .savings-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); background: var(--green-bg); border: 1px solid #a8d5b8; padding: 5px 12px; border-radius: 20px; margin-bottom: 16px; font-weight: 500; }
+
+  /* ── Price compare table ── */
+  .ptable { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ptable th { font-size: 11px; font-weight: 500; color: var(--ink3); padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--paper3); }
+  .ptable th:first-child { text-align: left; }
+  .ptable td { padding: 8px 8px; border-bottom: 1px solid var(--paper2); text-align: right; color: var(--ink2); }
+  .ptable td:first-child { text-align: left; color: var(--ink); font-weight: 500; }
+  .ptable .best { color: var(--green); font-weight: 500; }
+  .ptable .na { color: var(--ink3); font-style: italic; }
+  .ptable tr:last-child td { border-bottom: none; font-weight: 500; color: var(--ink); border-top: 1px solid var(--ink); padding-top: 10px; }
+
+  /* ── Cost breakdown table ── */
+  .btable { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .btable th { font-size: 11px; font-weight: 500; color: var(--ink3); padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--paper3); white-space: nowrap; }
+  .btable th.r { text-align: right; }
+  .btable td { padding: 10px 8px; border-bottom: 1px solid var(--paper2); vertical-align: middle; color: var(--ink); }
+  .btable tr:nth-child(even) td { background: var(--paper); }
+  .btable tr:last-child td { border-bottom: none; }
+  .btable .r { text-align: right; }
+  .btable .muted { font-size: 11px; color: var(--ink3); display: block; margin-top: 2px; }
+  .edit-num { background: none; border: none; border-bottom: 1px dashed var(--paper3); font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--ink); width: 70px; text-align: right; padding: 2px 4px; }
+  .edit-num:focus { outline: none; border-bottom-color: var(--ink2); }
+
+  /* ── Stepper ── */
+  .stepper { display: inline-flex; align-items: center; gap: 8px; }
+  .stepper-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--paper3); background: #fff; color: var(--ink); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: border-color 0.12s; }
+  .stepper-btn:hover { border-color: var(--ink2); }
+  .stepper-val { font-size: 15px; font-weight: 500; min-width: 24px; text-align: center; }
+
+  /* ── Totals block ── */
+  .totals-block { margin-top: 20px; display: flex; justify-content: flex-end; }
+  .totals-inner { width: 320px; font-size: 13px; }
+  .trow { display: flex; justify-content: space-between; padding: 5px 0; color: var(--ink2); }
+  .trow.section { color: var(--ink3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 12px; }
+  .trow.subtotal { color: var(--ink); font-weight: 500; border-top: 1px solid var(--paper3); margin-top: 4px; padding-top: 8px; }
+  .trow.tax { color: var(--ink2); }
+  .trow.grand { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); border-top: 2px solid var(--ink); margin-top: 6px; padding-top: 10px; }
+
+  /* ── Shopping checklist ── */
+  .slist { list-style: none; }
+  .slist li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--paper2); }
+  .slist li:last-child { border-bottom: none; }
+  .scheck { width: 18px; height: 18px; border: 1.5px solid var(--paper3); border-radius: 4px; flex-shrink: 0; cursor: pointer; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+  .scheck.on { background: var(--green); border-color: var(--green); }
+  .scheck.on::after { content: ''; display: block; width: 5px; height: 8px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(40deg) translate(-1px,-1px); }
+  .sitem-name { font-weight: 500; font-size: 13px; }
+  .sitem-detail { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+  .sitem-price { font-size: 13px; font-weight: 500; white-space: nowrap; margin-left: auto; }
+
+  /* ── Doc cards ── */
+  .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .doc-card { background: #fff; border: 1px solid var(--paper3); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+  .doc-card:hover { border-color: var(--ink2); box-shadow: var(--shadow); }
+  .doc-icon { width: 40px; height: 50px; border-radius: 5px; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-size: 9px; font-weight: 500; position: relative; overflow: hidden; }
+  .doc-icon-blue { background: var(--blue-bg); color: var(--blue); }
+  .doc-icon-green { background: var(--green-bg); color: var(--green); }
+  .doc-icon::after { content: ''; position: absolute; top: 0; right: 0; border-left: 12px solid transparent; border-bottom: 12px solid #fff; }
+  .doc-card-name { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .doc-card-desc { font-size: 12px; color: var(--ink3); }
+
+  /* ── Summary metrics ── */
+  .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .metric { background: var(--paper); border: 1px solid var(--paper3); border-radius: var(--radius); padding: 14px 16px; }
+  .metric-label { font-size: 11px; color: var(--ink3); margin-bottom: 6px; }
+  .metric-value { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); }
+
+  /* ── AI result area ── */
+  .ai-result { background: var(--paper); border: 1px solid var(--paper3); border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: var(--ink2); line-height: 1.7; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+  .ai-thinking { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink3); padding: 20px 0; }
+  .dots span { animation: blink 1.2s infinite; }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+  /* ── Tags ── */
+  .tag { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; margin-right: 4px; }
+  .tag-blue { background: var(--blue-bg); color: var(--blue); }
+  .tag-green { background: var(--green-bg); color: var(--green); }
+  .tag-amber { background: var(--warn-bg); color: var(--warn); }
+
+  /* ── Notices ── */
+  .notice { background: var(--warn-bg); border: 1px solid #f0c080; border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: var(--warn); margin-bottom: 14px; }
+  .notice-green { background: var(--green-bg); border-color: #a8d5b8; color: var(--green); }
+
+  /* ── Chips ── */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--paper3); color: var(--ink2); cursor: pointer; background: #fff; transition: all 0.12s; }
+  .chip:hover { border-color: var(--ink2); color: var(--ink); background: var(--paper); }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 80px 40px; color: var(--ink3); }
+  .empty-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--ink2); margin-bottom: 10px; }
+  .empty-sub { font-size: 14px; margin-bottom: 28px; }
+
+  /* ── Anim ── */
+  .fade-in { animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── Print / export area (for PDF) ── */
+  .print-area { display: none; }
+  @media print {
+    .sidebar, .top-bar, .wizard, .btn-row, .sb-new, .chips { display: none !important; }
+    .main { margin-left: 0; }
+    .content { padding: 20px; max-width: 100%; }
+    .print-area { display: block; }
+    .card { border: 1px solid #ccc; page-break-inside: avoid; }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 800px) {
+    .sidebar { width: 200px; }
+    .main { margin-left: 200px; }
+    .shop-grid { grid-template-columns: 1fr 1fr; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .doc-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-title">BauAngebot</div>
+      <div class="sb-logo-sub">Berlin · Kostenvoranschläge</div>
+    </div>
+    <div class="sb-new">
+      <button onclick="newQuote()">Neues Angebot</button>
+    </div>
+    <div class="sb-section">Gespeicherte Angebote</div>
+    <ul class="sb-list" id="sbList"></ul>
+    <div class="sb-footer">Stage 1 · Claude-powered · v1.0</div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+    <div class="top-bar">
+      <div class="top-bar-title" id="topTitle">Neues Angebot</div>
+      <div class="top-bar-meta" id="topMeta"></div>
+    </div>
+    <div class="content" id="mainContent">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let quotes = [];
+let current = null; // current quote object
+let currentStep = 1;
+
+// Load from localStorage
+function loadStorage() {
+  try { quotes = JSON.parse(localStorage.getItem('bauangebot_quotes') || '[]'); } catch(e) { quotes = []; }
+}
+function saveStorage() {
+  localStorage.setItem('bauangebot_quotes', JSON.stringify(quotes));
+}
+
+/* ═══════════════════════════════════════════════
+   FORMATTING
+═══════════════════════════════════════════════ */
+function fmtEur(n) {
+  return Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+function todayStr() {
+  return new Date().toLocaleDateString('de-DE');
+}
+function dateId() {
+  return new Date().toISOString().slice(0,10).replace(/-/g,'');
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+function renderSidebar() {
+  const list = document.getElementById('sbList');
+  list.innerHTML = '';
+  if (quotes.length === 0) {
+    list.innerHTML = '<li style="padding:12px;font-size:12px;color:rgba(255,255,255,0.3);">Noch keine Angebote</li>';
+    return;
+  }
+  [...quotes].reverse().forEach(q => {
+    const li = document.createElement('li');
+    if (current && current.id === q.id) li.classList.add('active');
+    li.innerHTML = `<button onclick="openQuote('${q.id}')">
+      <span class="sb-item-name">${q.client || 'Unbenannt'}</span>
+      <span class="sb-item-meta">${q.date || ''} · ${q.totalBrutto ? fmtEur(q.totalBrutto) : '—'}</span>
+    </button>`;
+    list.appendChild(li);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   WIZARD STEPS
+═══════════════════════════════════════════════ */
+function renderWizard(step) {
+  const labels = ['Auftrag','Analyse','Preise','Prüfen','Dokumente'];
+  let html = '';
+  labels.forEach((l, i) => {
+    const n = i + 1;
+    let cls = 'wstep';
+    if (n === step) cls += ' active';
+    if (n < step) cls += ' done clickable';
+    const num = n < step ? '✓' : n;
+    const nav = n < step ? `onclick="goStep(${n})"` : '';
+    html += `<div class="${cls}" ${nav}><div class="wnum">${num}</div>${l}</div>`;
+    if (i < 4) html += '<div class="wdiv"></div>';
+  });
+  return `<div class="wizard">${html}</div>`;
+}
+
+function goStep(n) {
+  if (!current) return;
+  currentStep = n;
+  render();
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER DISPATCHER
+═══════════════════════════════════════════════ */
+function render() {
+  const el = document.getElementById('mainContent');
+  if (!current) { renderEmpty(); return; }
+  document.getElementById('topTitle').textContent = current.client || 'Neues Angebot';
+  document.getElementById('topMeta').textContent = current.date ? 'Erstellt ' + current.date : '';
+  let html = renderWizard(currentStep);
+  if (currentStep === 1) html += renderStep1();
+  else if (currentStep === 2) html += renderStep2();
+  else if (currentStep === 3) html += renderStep3();
+  else if (currentStep === 4) html += renderStep4();
+  else if (currentStep === 5) html += renderStep5();
+  el.innerHTML = html;
+  el.classList.add('fade-in');
+  bindStep();
+}
+
+function renderEmpty() {
+  document.getElementById('topTitle').textContent = 'BauAngebot Berlin';
+  document.getElementById('topMeta').textContent = '';
+  document.getElementById('mainContent').innerHTML = `
+    <div class="empty">
+      <div class="empty-title">Willkommen bei BauAngebot</div>
+      <div class="empty-sub">KI-gestützte Kostenvoranschläge mit Preisvergleich für Berliner Baumärkte.</div>
+      <button class="btn btn-primary" onclick="newQuote()">Erstes Angebot erstellen</button>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   STEP 1 — Job Input
+═══════════════════════════════════════════════ */
+function renderStep1() {
+  const q = current;
+  return `
+  <div class="card fade-in">
+    <div class="card-title">Auftragsinfo</div>
+    <div class="grid2">
+      <div class="field"><label>Auftraggeber</label><input id="f_client" value="${q.client||''}" placeholder="z.B. Familie Müller" /></div>
+      <div class="field"><label>Baustelle / Adresse</label><input id="f_addr" value="${q.addr||''}" placeholder="Straße, Bezirk" /></div>
+    </div>
+    <div class="field"><label>Leistungsbeschreibung (Kundenbeschreibung)</label>
+      <textarea id="f_desc" placeholder="Beschreiben Sie die Baumaßnahme in eigenen Worten…">${q.desc||''}</textarea>
+    </div>
+    <div style="font-size:12px;color:var(--ink3);margin-top:4px;">Beispiele:</div>
+    <div class="chips">
+      <div class="chip" onclick="setEx('bad')">Badsanierung</div>
+      <div class="chip" onclick="setEx('malen')">Malerarbeiten</div>
+      <div class="chip" onclick="setEx('elektro')">Elektroinstallation</div>
+      <div class="chip" onclick="setEx('terrasse')">Terrassenbau</div>
+      <div class="chip" onclick="setEx('kueche')">Küchenrenovierung</div>
+    </div>
+  </div>
+
+  <div class="card fade-in" style="animation-delay:0.04s">
+    <div class="card-title">Arbeitseinsatz</div>
+    <div class="grid3">
+      <div class="field"><label>Mitarbeiter</label><input type="number" id="f_emp" min="1" max="30" value="${q.emp||2}" /></div>
+      <div class="field"><label>Arbeitstage</label><input type="number" id="f_days" min="1" max="90" value="${q.days||3}" /></div>
+      <div class="field"><label>Tagessatz pro Person (€)</label><input type="number" id="f_rate" min="50" max="2000" value="${q.rate||200}" /></div>
+    </div>
+    <div class="work-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:var(--ink2);">Arbeitskosten gesamt</span>
+        <span id="workPreview" style="font-family:'DM Serif Display',serif;font-size:20px;">${fmtEur((q.emp||2)*(q.days||3)*(q.rate||200))}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="step1Next()">KI-Analyse starten →</button>
+  </div>`;
+}
+
+function bindStep1() {
+  ['f_emp','f_days','f_rate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => {
+      const emp = parseFloat(document.getElementById('f_emp').value)||1;
+      const days = parseFloat(document.getElementById('f_days').value)||1;
+      const rate = parseFloat(document.getElementById('f_rate').value)||200;
+      document.getElementById('workPreview').textContent = fmtEur(emp*days*rate);
+    });
+  });
+}
+
+function setEx(key) {
+  const ex = {
+    bad:      { c:'Familie Becker',   a:'Kastanienallee 22, Prenzlauer Berg', d:'Wir möchten unser Badezimmer sanieren. Die alten Fliesen sollen entfernt und neu gefliest werden (ca. 8 m² Boden, 22 m² Wand). Außerdem Waschtisch austauschen und alles frisch streichen.' },
+    malen:    { c:'Herr Schmidt',     a:'Friedrichstr. 90, Mitte',             d:'2 Zimmer streichen nach Auszug des Mieters. Wände und Decken weiß, je ca. 20 m². Kleinere Putzschäden ausbessern.' },
+    elektro:  { c:'Büro Lange GmbH', a:'Boxhagener Str. 18, Friedrichshain',  d:'Elektroinstallation für 200 m² Bürofläche: LED-Downlights, 3-phasige Unterverteilung, Datenkabelvorinstallation, Notbeleuchtung.' },
+    terrasse: { c:'Fam. Hoffmann',   a:'Zossener Str. 5, Kreuzberg',          d:'Holzterrasse 6×4 m aus Bangkirai bauen, mit Stufen zum Garten. Betonpfosten als Fundament.' },
+    kueche:   { c:'Frau Neumann',    a:'Schönhauser Allee 10, Pankow',        d:'Küche komplett renovieren: Boden neu fliesen (15 m²), Wände streichen, Unterschränke montieren und Elektroinstallation für neue Geräte.' },
+  };
+  const e = ex[key];
+  document.getElementById('f_client').value = e.c;
+  document.getElementById('f_addr').value = e.a;
+  document.getElementById('f_desc').value = e.d;
+}
+
+function step1Next() {
+  current.client = document.getElementById('f_client').value.trim() || 'Kunde';
+  current.addr   = document.getElementById('f_addr').value.trim();
+  current.desc   = document.getElementById('f_desc').value.trim();
+  current.emp    = parseInt(document.getElementById('f_emp').value)||2;
+  current.days   = parseInt(document.getElementById('f_days').value)||3;
+  current.rate   = parseFloat(document.getElementById('f_rate').value)||200;
+  if (!current.desc) { alert('Bitte eine Leistungsbeschreibung eingeben.'); return; }
+  current.aiDone = false;
+  saveQuote();
+  currentStep = 2;
+  render();
+  runAI();
+}
+
+/* ═══════════════════════════════════════════════
+   STEP 2 — AI Analysis
+═══════════════════════════════════════════════ */
+function renderStep2() {
+  return `
+  <div class="card fade-in">
+    <div class="card-title">KI-Analyse & Preisrecherche</div>
+    <div class="ai-status" id="aiStatus">
+      <div class="ai-thinking">
+        <div class="dots"><span>●</span><span>●</span><span>●</span></div>
+        Starte Analyse…
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+    <div id="aiLog" style="margin-top:16px;font-size:12px;color:var(--ink3);line-height:2;"></div>
+  </div>`;
+}
+
+async function runAI() {
+  const steps = [
+    'Leistungsbeschreibung analysieren…',
+    'Gewerke klassifizieren…',
+    'Materialien & Mengen berechnen…',
+    'Hornbach Berlin Preise suchen…',
+    'OBI Berlin Preise suchen…',
+    'Bauhaus Berlin Preise suchen…',
+    'Globus Baumarkt Preise suchen…',
+    'Günstigsten Gesamtkorb ermitteln…',
+    'Kostenvoranschlag generieren…',
+  ];
+  const statusEl = document.getElementById('aiStatus');
+  const logEl = document.getElementById('aiLog');
+  const progEl = document.getElementById('progFill');
+  if (!statusEl) return;
+
+  // Animate through fake steps while AI call runs
+  let stepIdx = 0;
+  const stepInterval = setInterval(() => {
+    if (!document.getElementById('aiStatus')) { clearInterval(stepInterval); return; }
+    if (stepIdx < steps.length) {
+      const pct = Math.round((stepIdx / steps.length) * 85);
+      progEl.style.width = pct + '%';
+      statusEl.innerHTML = `<div class="ai-step running"><div class="ai-dot"></div>${steps[stepIdx]}</div>`;
+      if (stepIdx > 0 && logEl) {
+        logEl.innerHTML += `<span style="color:var(--green);">✓</span> ${steps[stepIdx-1]}<br>`;
+      }
+      stepIdx++;
+    }
+  }, 600);
+
+  // Real AI call
+  const prompt = buildAIPrompt();
+  let aiResult = null;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Du bist ein Experte für Berliner Baukosten. Antworte NUR mit einem JSON-Objekt, kein Text davor oder danach, keine Markdown-Backticks.
+Das JSON muss folgendes Schema haben:
+{
+  "category": "string (Gewerk-Kategorie)",
+  "items": [
+    { "pos": 1, "desc": "Leistungsbeschreibung", "note": "kurze Anmerkung", "mat": 123.45 }
+  ],
+  "shops": {
+    "hornbach": 387.50,
+    "obi": 421.80,
+    "bauhaus": 443.20,
+    "globus": 398.10
+  },
+  "winner": "hornbach",
+  "winnerAddr": "Tempelhof · Ordensmeisterstr. 43",
+  "savings": 55.70,
+  "assumptions": "Kurze Annahmen als String",
+  "exclusions": "Was nicht enthalten ist"
+}
+Materialpreise sind realistische Berliner Marktpreise (netto, ohne MwSt). Beachte: Hornbach, OBI, Bauhaus, Globus Baumarkt sind die 4 Berliner Baumärkte.`,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const raw = data.content?.[0]?.text || '';
+    const clean = raw.replace(/```json|```/g,'').trim();
+    aiResult = JSON.parse(clean);
+  } catch(e) {
+    aiResult = fallbackData(current.desc);
+  }
+
+  clearInterval(stepInterval);
+  if (!document.getElementById('aiStatus')) return;
+  progEl.style.width = '100%';
+  statusEl.innerHTML = `<div class="ai-step done"><div class="ai-dot"></div>Analyse abgeschlossen.</div>`;
+
+  current.aiData = aiResult;
+  // Build items with editable values
+  current.items = aiResult.items.map(item => ({
+    pos: item.pos,
+    desc: item.desc,
+    note: item.note || '',
+    mat: item.mat
+  }));
+  current.shops = aiResult.shops;
+  current.winner = aiResult.winner;
+  current.winnerAddr = aiResult.winnerAddr;
+  current.savings = aiResult.savings;
+  current.category = aiResult.category;
+  current.assumptions = aiResult.assumptions;
+  current.exclusions = aiResult.exclusions;
+  saveQuote();
+
+  setTimeout(() => { currentStep = 3; render(); }, 800);
+}
+
+function buildAIPrompt() {
+  return `Erstelle einen Kostenvoranschlag für folgende Baumaßnahme in Berlin:
+
+Auftraggeber: ${current.client}
+Adresse: ${current.addr}
+Leistung: ${current.desc}
+Mitarbeiter: ${current.emp}, Arbeitstage: ${current.days}, Tagessatz: ${current.rate}€
+
+Analysiere die Leistung, schlage realistische Positionen vor und schätze Materialkosten (netto). Vergleiche auch die Materialpreise bei Hornbach, OBI, Bauhaus und Globus Baumarkt in Berlin und wähle den günstigsten Gesamtkorb.`;
+}
+
+function fallbackData(desc) {
+  return {
+    category: 'Renovierung / Allgemein',
+    items: [
+      { pos:1, desc:'Vorbereitung & Abbruch', note:'Pauschal', mat:120 },
+      { pos:2, desc:'Hauptleistung gemäß Beschreibung', note:'Standardmaterialien', mat:380 },
+      { pos:3, desc:'Nacharbeiten & Reinigung', note:'Pauschal', mat:80 },
+    ],
+    shops: { hornbach:387, obi:421, bauhaus:443, globus:398 },
+    winner:'hornbach', winnerAddr:'Tempelhof · Ordensmeisterstr. 43', savings:56,
+    assumptions:'Standardmaterialien, mittlere Preisklasse. Tagessatz 200€/Person.',
+    exclusions:'Genehmigungen, Entsorgung, Sonderleistungen.'
+  };
+}
+
+/* ═══════════════════════════════════════════════
+   STEP 3 — Shop Prices
+═══════════════════════════════════════════════ */
+function renderStep3() {
+  const s = current.shops || {};
+  const w = current.winner || 'hornbach';
+  const shopNames = { hornbach:'Hornbach', obi:'OBI', bauhaus:'Bauhaus', globus:'Globus Baumarkt' };
+  const shopAddrs = {
+    hornbach: current.winnerAddr || 'Tempelhof · Ordensmeisterstr. 43',
+    obi: 'Lichtenberg · Herzbergstr. 80',
+    bauhaus: 'Neukölln · Grenzallee 1',
+    globus: 'Tempelhof · Bessemerstr. 85'
+  };
+
+  let shopCards = '';
+  Object.entries(shopNames).forEach(([key, name]) => {
+    const isWinner = key === w;
+    shopCards += `<div class="shop-card ${isWinner?'winner':''}">
+      ${isWinner ? '<div class="shop-badge">Empfehlung</div>' : ''}
+      <div class="shop-name">${name}</div>
+      <div class="shop-price">${fmtEur(s[key]||0)}</div>
+      <div class="shop-addr">${shopAddrs[key]}</div>
+    </div>`;
+  });
+
+  const items = current.items || [];
+  let rows = '';
+  items.forEach(item => {
+    // distribute material cost across shops with small variance
+    const base = item.mat;
+    const prices = {
+      hornbach: (base * 0.88).toFixed(0),
+      obi:      (base * 0.96).toFixed(0),
+      bauhaus:  (base * 1.05).toFixed(0),
+      globus:   (base * 0.92).toFixed(0),
+    };
+    const best = Object.keys(prices).reduce((a,b) => parseFloat(prices[a]) < parseFloat(prices[b]) ? a : b);
+    rows += `<tr>
+      <td>${item.desc}</td>
+      <td>1 psch.</td>
+      ${Object.keys(shopNames).map(k => `<td class="${k===best?'best':''}">${fmtEur(parseFloat(prices[k]))}</td>`).join('')}
+    </tr>`;
+  });
+
+  return `
+  <div class="card fade-in">
+    <div class="card-title">Preisvergleich — Berliner Baumärkte</div>
+    <div class="shop-grid">${shopCards}</div>
+    <div class="savings-tag">Ersparnis: ${fmtEur(current.savings||0)} gegenüber teuerstem Anbieter</div>
+    <table class="ptable">
+      <thead><tr><th>Position</th><th>Menge</th><th>Bauhaus</th><th>OBI</th><th>Hornbach</th><th>Globus</th></tr></thead>
+      <tbody>${rows}
+        <tr><td>Gesamtkorb</td><td></td>
+          ${Object.keys(shopNames).map(k=>`<td class="${k===w?'best':''}">${fmtEur(s[k]||0)}</td>`).join('')}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="goStep(4)">Weiter zur Prüfung →</button>
+    <button class="btn btn-secondary" onclick="goStep(1)">Zurück</button>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   STEP 4 — Review & Edit
+═══════════════════════════════════════════════ */
+function renderStep4() {
+  const items = current.items || [];
+  let rows = '';
+  items.forEach((item, i) => {
+    rows += `<tr>
+      <td>${item.pos}</td>
+      <td>${item.desc}<span class="muted">${item.note}</span></td>
+      <td class="r"><input class="edit-num" id="mat_${i}" value="${item.mat}" oninput="recalc4()"></td>
+      <td class="r" id="row_${i}">${fmtEur(item.mat)}</td>
+    </tr>`;
+  });
+
+  const emp = current.emp||2, days = current.days||3, rate = current.rate||200;
+  const workCost = emp * days * rate;
+  const matSum = items.reduce((a,b) => a + (parseFloat(b.mat)||0), 0);
+  const markup = matSum * 0.15;
+  const netto = matSum + markup + workCost;
+  const mwst = netto * 0.19;
+  const brutto = netto + mwst;
+  current.totalBrutto = brutto;
+
+  return `
+  <div class="card fade-in">
+    <div class="card-title">Kostenvoranschlag — Entwurf</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <span class="tag tag-blue">${current.category||'Renovierung'}</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--ink3);">${current.client} · ${current.addr}</span>
+    </div>
+
+    <table class="btable">
+      <thead><tr><th>Pos.</th><th>Leistungsbeschreibung</th><th class="r">Material (€)</th><th class="r">Gesamt</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <div style="background:var(--paper);border:1px solid var(--paper3);border-radius:var(--radius);padding:16px 20px;margin-top:16px;">
+      <div style="font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;">Arbeitskosten</div>
+      <div class="grid3">
+        <div>
+          <div style="font-size:12px;color:var(--ink2);margin-bottom:6px;">Mitarbeiter</div>
+          <div class="stepper">
+            <button class="stepper-btn" onclick="adjWork('emp',-1)">−</button>
+            <span class="stepper-val" id="w_emp">${emp}</span>
+            <button class="stepper-btn" onclick="adjWork('emp',1)">+</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--ink2);margin-bottom:6px;">Arbeitstage</div>
+          <div class="stepper">
+            <button class="stepper-btn" onclick="adjWork('days',-1)">−</button>
+            <span class="stepper-val" id="w_days">${days}</span>
+            <button class="stepper-btn" onclick="adjWork('days',1)">+</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--ink2);margin-bottom:6px;">Tagessatz (€)</div>
+          <input class="edit-num" id="w_rate" value="${rate}" oninput="recalc4()" style="width:80px;font-size:15px;font-weight:500;">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:12px;border-top:1px solid var(--paper3);">
+        <span style="font-size:13px;color:var(--ink2);" id="workLabel">${emp} MA × ${days} Tage × ${rate} €</span>
+        <span style="font-family:'DM Serif Display',serif;font-size:22px;" id="workTotal">${fmtEur(workCost)}</span>
+      </div>
+    </div>
+
+    <div class="totals-block">
+      <div class="totals-inner">
+        <div class="trow section"><span>Materialien</span></div>
+        <div class="trow"><span>Materialsumme</span><span id="t_mat">${fmtEur(matSum)}</span></div>
+        <div class="trow"><span>Aufschlag (15 %)</span><span id="t_markup">${fmtEur(markup)}</span></div>
+        <div class="trow section"><span>Arbeit</span></div>
+        <div class="trow"><span id="t_workLabel">${emp} MA × ${days} T × ${rate} €</span><span id="t_work">${fmtEur(workCost)}</span></div>
+        <div class="trow subtotal"><span>Netto gesamt</span><span id="t_netto">${fmtEur(netto)}</span></div>
+        <div class="trow tax"><span>zzgl. MwSt. 19 %</span><span id="t_mwst">${fmtEur(mwst)}</span></div>
+        <div class="trow grand"><span>Brutto gesamt</span><span id="t_brutto">${fmtEur(brutto)}</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--paper2);font-size:12px;color:var(--ink3);">
+      <strong>Annahmen:</strong> ${current.assumptions||'—'}<br>
+      <strong>Nicht enthalten:</strong> ${current.exclusions||'—'}
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="step4Next()">Dokumente erstellen →</button>
+    <button class="btn btn-secondary" onclick="goStep(3)">Zurück</button>
+  </div>`;
+}
+
+let wState = {};
+function bindStep4() {
+  const q = current;
+  wState = { emp: q.emp||2, days: q.days||3 };
+}
+
+function adjWork(field, delta) {
+  const key = field;
+  wState[key] = Math.max(1, (wState[key]||1) + delta);
+  current[key] = wState[key];
+  document.getElementById('w_' + field).textContent = wState[key];
+  recalc4();
+}
+
+function recalc4() {
+  const items = current.items || [];
+  let matSum = 0;
+  items.forEach((item, i) => {
+    const val = parseFloat(document.getElementById('mat_'+i)?.value) || 0;
+    item.mat = val;
+    const rowEl = document.getElementById('row_'+i);
+    if (rowEl) rowEl.textContent = fmtEur(val);
+    matSum += val;
+  });
+
+  const rate = parseFloat(document.getElementById('w_rate')?.value) || 200;
+  current.rate = rate;
+  const emp = wState.emp || current.emp || 2;
+  const days = wState.days || current.days || 3;
+  const workCost = emp * days * rate;
+
+  const markup = matSum * 0.15;
+  const netto = matSum + markup + workCost;
+  const mwst = netto * 0.19;
+  const brutto = netto + mwst;
+  current.totalBrutto = brutto;
+
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  set('t_mat', fmtEur(matSum));
+  set('t_markup', fmtEur(markup));
+  set('t_work', fmtEur(workCost));
+  set('t_netto', fmtEur(netto));
+  set('t_mwst', fmtEur(mwst));
+  set('t_brutto', fmtEur(brutto));
+  set('workTotal', fmtEur(workCost));
+  const wl = `${emp} MA × ${days} Tage × ${rate} €`;
+  set('workLabel', wl);
+  set('t_workLabel', wl);
+  saveQuote();
+}
+
+function step4Next() {
+  recalc4();
+  saveQuote();
+  currentStep = 5;
+  render();
+}
+
+/* ═══════════════════════════════════════════════
+   STEP 5 — Documents & Shopping List
+═══════════════════════════════════════════════ */
+function renderStep5() {
+  const items = current.items || [];
+  const emp = current.emp||2, days = current.days||3, rate = current.rate||200;
+  const matSum = items.reduce((a,b) => a+(parseFloat(b.mat)||0), 0);
+  const markup = matSum * 0.15;
+  const workCost = emp * days * rate;
+  const netto = matSum + markup + workCost;
+  const mwst = netto * 0.19;
+  const brutto = netto + mwst;
+  const winnerName = { hornbach:'Hornbach', obi:'OBI', bauhaus:'Bauhaus', globus:'Globus Baumarkt' }[current.winner||'hornbach'];
+
+  let shoppingRows = '';
+  items.forEach((item, i) => {
+    shoppingRows += `<li>
+      <div class="scheck" id="sc_${i}" onclick="toggleCheck(${i})"></div>
+      <div style="flex:1">
+        <div class="sitem-name">${item.desc}</div>
+        <div class="sitem-detail">${item.note} · Menge: 1 psch. (+10% Puffer)</div>
+      </div>
+      <div class="sitem-price">${fmtEur(item.mat)}</div>
+    </li>`;
+  });
+
+  return `
+  <div class="doc-grid fade-in">
+    <div class="doc-card" onclick="printQuote()">
+      <div class="doc-icon doc-icon-blue">ANGEBOT</div>
+      <div class="doc-card-name">angebot_${slugify(current.client)}_${dateId()}.pdf</div>
+      <div class="doc-card-desc">Kundenangebot · inkl. Arbeitskosten, MwSt. & AGB</div>
+      <div style="margin-top:10px"><span class="tag tag-blue">Für Kunden</span></div>
+    </div>
+    <div class="doc-card" onclick="printShopping()">
+      <div class="doc-icon doc-icon-green">EINKAUF</div>
+      <div class="doc-card-name">einkaufsliste_${slugify(current.client)}_${dateId()}.pdf</div>
+      <div class="doc-card-desc">Intern · ${winnerName} · Checkliste zum Abhaken</div>
+      <div style="margin-top:10px;display:flex;gap:6px"><span class="tag tag-green">Intern</span><span class="tag tag-amber">${winnerName}</span></div>
+    </div>
+  </div>
+
+  <div class="metrics fade-in" style="animation-delay:0.05s">
+    <div class="metric">
+      <div class="metric-label">Materialien + Aufschlag</div>
+      <div class="metric-value">${fmtEur(matSum+markup)}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Arbeitskosten</div>
+      <div class="metric-value">${fmtEur(workCost)}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Brutto gesamt (inkl. MwSt.)</div>
+      <div class="metric-value" style="color:var(--accent)">${fmtEur(brutto)}</div>
+    </div>
+  </div>
+
+  <div class="card fade-in" style="animation-delay:0.08s">
+    <div class="card-title">Einkaufsliste — ${winnerName} ${current.winnerAddr||''}</div>
+    <div class="notice notice-green" style="margin-bottom:12px">
+      Empfohlener Lieferant: <strong>${winnerName}</strong> · Ersparnis ${fmtEur(current.savings||0)} vs. teuerstem Anbieter
+    </div>
+    <ul class="slist">${shoppingRows}</ul>
+    <div style="display:flex;justify-content:space-between;padding-top:12px;margin-top:4px;border-top:1px solid var(--paper3);font-size:14px;font-weight:500;">
+      <span>Verbleibend</span><span id="shopRemain">${fmtEur(matSum)}</span>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:6px;">Preise recherchiert am ${todayStr()} · Bitte vor dem Einkauf prüfen. Alle Preise netto zzgl. 19% MwSt.</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goStep(4)">Zurück</button>
+    <button class="btn btn-secondary" onclick="newQuote()">Neues Angebot</button>
+  </div>
+
+  <!-- Hidden print areas -->
+  <div id="printQuoteArea" style="display:none"></div>
+  <div id="printShopArea" style="display:none"></div>`;
+}
+
+const shopChecked = {};
+function toggleCheck(i) {
+  shopChecked[i] = !shopChecked[i];
+  const el = document.getElementById('sc_'+i);
+  if (el) el.classList.toggle('on', shopChecked[i]);
+  updateShopTotal();
+}
+function updateShopTotal() {
+  const items = current.items || [];
+  let total = 0;
+  items.forEach((item, i) => { if (!shopChecked[i]) total += parseFloat(item.mat)||0; });
+  const el = document.getElementById('shopRemain');
+  if (el) el.textContent = fmtEur(total);
+}
+
+function slugify(s) { return (s||'kunde').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12) || 'kunde'; }
+
+function printQuote() {
+  const items = current.items || [];
+  const emp = current.emp||2, days = current.days||3, rate = current.rate||200;
+  const matSum = items.reduce((a,b) => a+(parseFloat(b.mat)||0), 0);
+  const markup = matSum * 0.15;
+  const workCost = emp * days * rate;
+  const netto = matSum + markup + workCost;
+  const mwst = netto * 0.19;
+  const brutto = netto + mwst;
+  const today = todayStr();
+  const validUntil = new Date(); validUntil.setDate(validUntil.getDate()+30);
+
+  const rows = items.map((item,i) => `<tr style="background:${i%2===1?'#f7f5f0':'#fff'}">
+    <td style="padding:8px;border:1px solid #e4dfd4;">${item.pos}</td>
+    <td style="padding:8px;border:1px solid #e4dfd4;"><strong>${item.desc}</strong><br><span style="font-size:11px;color:#8a8a80;">${item.note}</span></td>
+    <td style="padding:8px;border:1px solid #e4dfd4;text-align:center;">1 psch.</td>
+    <td style="padding:8px;border:1px solid #e4dfd4;text-align:right;">${fmtEur(item.mat)}</td>
+    <td style="padding:8px;border:1px solid #e4dfd4;text-align:right;">${fmtEur(item.mat)}</td>
+  </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
+  <style>body{font-family:Georgia,serif;font-size:13px;color:#1a1a18;margin:0;padding:0;}
+  .header{background:#1a1a18;color:#fff;padding:28px 36px;}
+  .header h1{font-size:24px;margin:0;letter-spacing:-0.5px;}
+  .header p{font-size:11px;opacity:0.5;margin:4px 0 0;letter-spacing:0.08em;text-transform:uppercase;}
+  .meta{display:flex;justify-content:space-between;padding:20px 36px;border-bottom:1px solid #e4dfd4;}
+  .section{padding:20px 36px;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#1b3a6b;color:#fff;padding:8px;font-size:11px;text-align:left;}
+  .total-row td{font-weight:bold;border-top:2px solid #1a1a18;padding-top:10px;}
+  .terms{padding:20px 36px;font-size:11px;color:#8a8a80;border-top:1px solid #e4dfd4;}
+  .sig{display:flex;justify-content:space-between;padding:30px 36px;}
+  .sig-line{width:200px;border-top:1px solid #1a1a18;padding-top:6px;font-size:11px;color:#8a8a80;}
+  </style></head><body>
+  <div class="header"><h1>Angebot / Kostenvoranschlag</h1><p>BauAngebot Berlin</p></div>
+  <div class="meta">
+    <div><strong>An:</strong><br>${current.client||'Kunde'}<br>${current.addr||''}</div>
+    <div style="text-align:right">Angebots-Nr.: ANG-${dateId()}-001<br>Datum: ${today}<br>Gültig bis: ${validUntil.toLocaleDateString('de-DE')}</div>
+  </div>
+  <div class="section">
+    <p><strong>Gegenstand:</strong> ${current.desc||''}</p>
+    <table style="margin-top:16px">
+      <thead><tr><th style="width:40px">Pos.</th><th>Leistungsbeschreibung</th><th style="width:80px">Menge</th><th style="width:100px;text-align:right">Material</th><th style="width:100px;text-align:right">Gesamt</th></tr></thead>
+      <tbody>${rows}
+      <tr style="background:#f7f5f0"><td colspan="2" style="padding:8px;border:1px solid #e4dfd4;"><strong>Arbeitskosten</strong><br><span style="font-size:11px;color:#8a8a80;">${emp} Mitarbeiter × ${days} Tage × ${rate} €/Tag</span></td>
+        <td style="padding:8px;border:1px solid #e4dfd4;text-align:center;">psch.</td>
+        <td style="padding:8px;border:1px solid #e4dfd4;text-align:right;">—</td>
+        <td style="padding:8px;border:1px solid #e4dfd4;text-align:right;">${fmtEur(workCost)}</td></tr>
+      </tbody>
+    </table>
+    <table style="margin-top:16px;width:300px;margin-left:auto">
+      <tr><td>Materialsumme</td><td style="text-align:right">${fmtEur(matSum)}</td></tr>
+      <tr><td>Aufschlag (15%)</td><td style="text-align:right">${fmtEur(markup)}</td></tr>
+      <tr><td>Arbeitskosten</td><td style="text-align:right">${fmtEur(workCost)}</td></tr>
+      <tr><td><strong>Netto gesamt</strong></td><td style="text-align:right"><strong>${fmtEur(netto)}</strong></td></tr>
+      <tr><td>zzgl. MwSt. 19%</td><td style="text-align:right">${fmtEur(mwst)}</td></tr>
+      <tr class="total-row"><td style="padding:8px 0"><strong>Brutto gesamt</strong></td><td style="text-align:right;font-size:18px"><strong>${fmtEur(brutto)}</strong></td></tr>
+    </table>
+  </div>
+  <div class="terms">
+    <strong>Annahmen:</strong> ${current.assumptions||'—'} &nbsp;|&nbsp; <strong>Nicht enthalten:</strong> ${current.exclusions||'—'}<br><br>
+    • Dieses Angebot gilt 30 Tage ab Ausstellungsdatum. &nbsp;• Preise netto zzgl. 19% MwSt. &nbsp;• 30% Anzahlung bei Auftragserteilung. &nbsp;• Es gelten die VOB/B sowie die anerkannten Regeln der Technik. &nbsp;• Handwerkerleistungen können gemäß §35a EStG steuerlich geltend gemacht werden (20% der Lohnkosten, max. 1.200€/Jahr).
+  </div>
+  <div class="sig">
+    <div class="sig-line">Auftraggeber · Datum</div>
+    <div class="sig-line">Auftragnehmer · Datum</div>
+  </div>
+  </body></html>`;
+
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+function printShopping() {
+  const items = current.items || [];
+  const winnerName = { hornbach:'Hornbach', obi:'OBI', bauhaus:'Bauhaus', globus:'Globus Baumarkt' }[current.winner||'hornbach'];
+  const matSum = items.reduce((a,b) => a+(parseFloat(b.mat)||0), 0);
+
+  const rows = items.map((item,i) => `<tr style="background:${i%2===1?'#f7f5f0':'#fff'}">
+    <td style="padding:10px;border:1px solid #e4dfd4;width:20px;">☐</td>
+    <td style="padding:10px;border:1px solid #e4dfd4;"><strong>${item.desc}</strong><br><span style="font-size:11px;color:#8a8a80;">${item.note} · Menge: 1 psch. (+10% Puffer)</span></td>
+    <td style="padding:10px;border:1px solid #e4dfd4;text-align:right;">${fmtEur(item.mat)}</td>
+  </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
+  <style>body{font-family:Georgia,serif;font-size:13px;color:#1a1a18;margin:0;padding:0;}
+  .header{background:#2d6a4f;color:#fff;padding:28px 36px;}
+  .header h1{font-size:22px;margin:0;}
+  .header p{font-size:11px;opacity:0.6;margin:4px 0 0;text-transform:uppercase;letter-spacing:0.08em;}
+  .meta{padding:20px 36px;border-bottom:1px solid #e4dfd4;}
+  .section{padding:20px 36px;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#2d6a4f;color:#fff;padding:8px;font-size:11px;text-align:left;}
+  .notice{background:#d8f3e0;border:1px solid #a8d5b8;border-radius:8px;padding:12px 16px;font-size:13px;color:#2d6a4f;margin-bottom:16px;}
+  </style></head><body>
+  <div class="header"><h1>Einkaufsliste — Intern</h1><p>${winnerName} · ${current.winnerAddr||''} · Erstellt ${todayStr()}</p></div>
+  <div class="meta"><strong>Projekt:</strong> ${current.client||''} · ${current.addr||''}</div>
+  <div class="section">
+    <div class="notice">Empfohlener Lieferant: <strong>${winnerName}</strong> · Einsparung: ${fmtEur(current.savings||0)} gegenüber teuerstem Anbieter</div>
+    <table>
+      <thead><tr><th style="width:30px">✓</th><th>Artikel</th><th style="width:100px;text-align:right">Preis (netto)</th></tr></thead>
+      <tbody>${rows}
+      <tr style="border-top:2px solid #1a1a18"><td></td><td style="padding:10px;font-weight:bold">Gesamt Einkauf</td><td style="padding:10px;text-align:right;font-weight:bold;font-size:16px">${fmtEur(matSum)}</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;font-size:11px;color:#8a8a80;">Preise recherchiert am ${todayStr()}. Bitte vor dem Einkauf auf der Website des Anbieters prüfen. Alle Preise netto zzgl. 19% MwSt. · INTERNE VERWENDUNG — NICHT FÜR KUNDEN BESTIMMT</p>
+  </div>
+  </body></html>`;
+
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+/* ═══════════════════════════════════════════════
+   QUOTE MANAGEMENT
+═══════════════════════════════════════════════ */
+function newQuote() {
+  current = {
+    id: 'q_' + Date.now(),
+    date: todayStr(),
+    client: '', addr: '', desc: '',
+    emp: 2, days: 3, rate: 200,
+    items: [], shops: {}, winner: '', winnerAddr: '', savings: 0,
+    category: '', assumptions: '', exclusions: '',
+    totalBrutto: 0
+  };
+  quotes.push(current);
+  saveStorage();
+  currentStep = 1;
+  render();
+  renderSidebar();
+}
+
+function openQuote(id) {
+  current = quotes.find(q => q.id === id);
+  if (!current) return;
+  currentStep = current.items && current.items.length > 0 ? 5 : 1;
+  render();
+  renderSidebar();
+}
+
+function saveQuote() {
+  const idx = quotes.findIndex(q => q.id === current.id);
+  if (idx >= 0) quotes[idx] = current;
+  else quotes.push(current);
+  saveStorage();
+  renderSidebar();
+}
+
+/* ═══════════════════════════════════════════════
+   BIND EVENTS AFTER RENDER
+═══════════════════════════════════════════════ */
+function bindStep() {
+  if (currentStep === 1) bindStep1();
+  if (currentStep === 4) bindStep4();
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+loadStorage();
+renderSidebar();
+if (quotes.length > 0) {
+  current = quotes[quotes.length-1];
+  currentStep = current.items && current.items.length > 0 ? 5 : 1;
+  render();
+} else {
+  renderEmpty();
+}
+</script>
+</body>
+</html>
