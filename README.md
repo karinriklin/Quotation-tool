@@ -153,13 +153,6 @@ bauangebot/
 ├── LICENSE
 └── README.md               # You are here
 ```
-
----
-
-## License
-
-MIT — use it, fork it, build on it.
-
 ---
 
 ## Built with
